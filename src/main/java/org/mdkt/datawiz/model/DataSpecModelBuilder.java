@@ -1,10 +1,11 @@
 /**
- * 
+ *
  */
 package org.mdkt.datawiz.model;
 
 
 import java.io.StringReader;
+import java.lang.reflect.Method;
 
 import nu.validator.htmlparser.common.XmlViolationPolicy;
 import nu.validator.htmlparser.sax.HtmlParser;
@@ -29,12 +30,12 @@ import org.xml.sax.SAXException;
 public class DataSpecModelBuilder {
 
 	private static final Logger logger = Logger.getLogger(DataSpecModelBuilder.class);
-	
+
 	private final DataSpecModel model = new DataSpecModel();;
 	private HtmlParser parser = null;
-	
+
 	/**
-	 * 
+	 *
 	 */
 	private DataSpecModelBuilder() {
 		parser = new HtmlParser();
@@ -45,13 +46,13 @@ public class DataSpecModelBuilder {
 			private Class<?> varType = null;
 			private StringBuffer varValue = new StringBuffer();
 			private StringBuffer methodName = new StringBuffer();
-			
+
 			public void startPrefixMapping(String prefix, String uri)
 					throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void startElement(String uri, String localName, String qName,
 					Attributes atts) throws SAXException {
 				logger.debug("start: uri=" + uri + ", localName=" + localName + ", qName=" + qName + ", attributes=" + atts);
@@ -72,46 +73,46 @@ public class DataSpecModelBuilder {
 						varType = String.class;
 					} else {
 						try {
-							varType = Class.forName(type);							
+							varType = Class.forName(type);
 						} catch (ClassNotFoundException e) {
 							throw new SAXException(e);
 						}
 					}
 				}
 			}
-			
+
 			public void startDocument() throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void skippedEntity(String name) throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void setDocumentLocator(Locator locator) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void processingInstruction(String target, String data)
 					throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void ignorableWhitespace(char[] ch, int start, int length)
 					throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void endPrefixMapping(String prefix) throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void endElement(String uri, String localName, String qName)
 					throws SAXException {
 				logger.debug("end: uri=" + uri + ", localName=" + localName + ", qName=" + qName);
@@ -130,17 +131,17 @@ public class DataSpecModelBuilder {
 					methodName.deleteCharAt(0);
 					String actualMethodName = StringUtils.uncapitalize(WordUtils.capitalizeFully(methodName.toString()).replaceAll("\\s", ""));
 
-					logger.debug("Method name: " + actualMethodName);					
+					logger.debug("Method name: " + actualMethodName);
 					model.setMethodNameForCurrentMethodSpecModel(actualMethodName);
 					methodName.delete(0, methodName.length());
 				}
 			}
-			
+
 			public void endDocument() throws SAXException {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			public void characters(char[] ch, int start, int length)
 					throws SAXException {
 				if (StringUtils.isNotBlank(varName)) {
@@ -155,14 +156,14 @@ public class DataSpecModelBuilder {
 	public static DataSpecModelBuilder create() {
 		return new DataSpecModelBuilder();
 	}
-	
+
 	public DataSpecModelBuilder from(TadahDataSpec spec) {
 		if (spec != null) {
 			parse(spec);
 		}
 		return this;
 	}
-	
+
 	/**
 	 * @param tadahDataSpecs
 	 */
@@ -186,21 +187,30 @@ public class DataSpecModelBuilder {
 		}
 		return this;
 	}
-	
-	public DataSpecModelBuilder from(TadahDataSpecFile spec) {
-		if (spec != null) {
-			parse(parseHtmlSpec(spec.value()));
-		}
-		return this;
-	}
-	
+
 	/**
-	 * @param value
+	 * if there's no value in the spec annotation, construct the spec html file name based on test class and method name<br/>
+	 * E.g.: TestClass.test_method.html<br/>
+	 * the file has to reside in the same folder as the TestClass
+	 * @param spec
+	 * @param testMethod
 	 * @return
 	 */
-	private TadahDataSpec[] parseHtmlSpec(String value) {
-		// TODO Auto-generated method stub
-		return null;
+	public DataSpecModelBuilder from(TadahDataSpecFile spec, Method testMethod) {
+		if (spec != null) {
+			model.newMethodSpecModel();
+			String specFile = (StringUtils.isNotBlank(spec.value())) ? spec.value()
+					: new StringBuffer().append(testMethod.getDeclaringClass().getSimpleName())
+						.append(".").append(testMethod.getName()).append(".html").toString();
+			logger.debug("Data Spec file: " + specFile);
+			try {
+				parser.parse(new InputSource(testMethod.getDeclaringClass().getResourceAsStream(specFile)));
+			} catch (Exception e) {
+				throw new DataWizException(e);
+			}
+			model.setHandlerForCurrentMethodSpecModel(spec.handler());
+		}
+		return this;
 	}
 
 	public DataSpecModel build() {

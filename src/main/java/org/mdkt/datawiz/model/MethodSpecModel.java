@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.mdkt.datawiz.model;
 
@@ -13,13 +13,13 @@ import org.mdkt.datawiz.AbstractDataWiz;
  *
  */
 public class MethodSpecModel {
-	
+
 	private Class<? extends AbstractDataWiz> handler;
 	private String methodName;
 	private List<Class<?>> methodArgumentTypes = new ArrayList<Class<?>>();
 	private List<Object> methodArgumentValues = new ArrayList<Object>();
-	
-	
+
+
 	/**
 	 * @param handler
 	 */
@@ -40,28 +40,28 @@ public class MethodSpecModel {
 	public void setMethodName(String methodName) {
 		this.methodName = methodName;
 	}
-	
+
 	/**
 	 * @return the methodName
 	 */
 	public String getMethodName() {
 		return methodName;
 	}
-	
+
 	/**
 	 * @return the methodArgumentTypes
 	 */
 	public List<Class<?>> getMethodArgumentTypes() {
 		return methodArgumentTypes;
 	}
-	
+
 	/**
 	 * @return the methodArgumentValues
 	 */
 	public List<Object> getMethodArgumentValues() {
 		return methodArgumentValues;
 	}
-	
+
 	/**
 	 * @param varType
 	 */
@@ -74,5 +74,16 @@ public class MethodSpecModel {
 	 */
 	public void addMethodArgumentValue(Object actualValue) {
 		this.methodArgumentValues.add(actualValue);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		buf.append(this.getClass().getSimpleName()).append(" ").append(methodName).append("(")
+		.append(this.methodArgumentTypes).append(")");
+		return buf.toString();
 	}
 }
