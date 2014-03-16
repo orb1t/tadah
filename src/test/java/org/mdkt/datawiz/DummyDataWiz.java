@@ -22,4 +22,12 @@ public class DummyDataWiz extends AbstractDataWiz {
 	public void depositInto(String currency, BigDecimal amount, String accountId) {
 
 	}
+
+	public void accountIsInCredit(String accountId) {
+
+	}
+
+	public void userMadeNoWithdrawalsRecently(String userName) {
+
+	}
 }

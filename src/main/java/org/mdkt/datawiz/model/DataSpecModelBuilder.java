@@ -4,24 +4,18 @@
 package org.mdkt.datawiz.model;
 
 
-import java.io.StringReader;
 import java.lang.reflect.Method;
 
-import nu.validator.htmlparser.common.XmlViolationPolicy;
-import nu.validator.htmlparser.sax.HtmlParser;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.apache.log4j.Logger;
+import org.mdkt.datawiz.AbstractDataWiz;
+import org.mdkt.datawiz.DataSpecAttribute;
+import org.mdkt.datawiz.DataSpecParser;
+import org.mdkt.datawiz.DataSpecVistor;
 import org.mdkt.datawiz.DataWizException;
 import org.mdkt.datawiz.annotation.TadahDataSpec;
 import org.mdkt.datawiz.annotation.TadahDataSpecFile;
 import org.mdkt.datawiz.annotation.TadahDataSpecList;
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
 
 /**
  * @author trung
@@ -32,123 +26,31 @@ public class DataSpecModelBuilder {
 	private static final Logger logger = Logger.getLogger(DataSpecModelBuilder.class);
 
 	private final DataSpecModel model = new DataSpecModel();;
-	private HtmlParser parser = null;
+	private DataSpecParser parser = null;
+	private Class<? extends AbstractDataWiz> currentHandler = null;
 
 	/**
 	 *
 	 */
 	private DataSpecModelBuilder() {
-		parser = new HtmlParser();
-		parser.setXmlnsPolicy(XmlViolationPolicy.ALLOW);
-		parser.setNamePolicy(XmlViolationPolicy.ALLOW);
-		parser.setContentHandler(new ContentHandler() {
-			private String varName = null;
-			private Class<?> varType = null;
-			private StringBuffer varValue = new StringBuffer();
-			private StringBuffer methodName = new StringBuffer();
+		parser = new DataSpecParser(new DataSpecVistor() {
 
-			public void startPrefixMapping(String prefix, String uri)
-					throws SAXException {
-				// TODO Auto-generated method stub
-
+			@Override
+			public void onVar(String varName, Class<?> varType, Object varValue) {
+				model.addStaticBinding(varName, varValue);
+				model.addMethodArgumentTypeForCurrentMethodSpecModel(varType);
+				model.addMethodArgumentValueForCurrentMethodSpecModel(varValue);
 			}
 
-			public void startElement(String uri, String localName, String qName,
-					Attributes atts) throws SAXException {
-				logger.debug("start: uri=" + uri + ", localName=" + localName + ", qName=" + qName + ", attributes=" + atts);
-				if (atts.getValue("tadah:given") != null) {
-					methodName.append("_");
-				} else if (StringUtils.isNotBlank(methodName)){
-					String _varName = atts.getValue("tadah:var");
-					if (StringUtils.isNotBlank(varName)) {
-						throw new SAXException("Potential duplicate tadah:var attribute");
-					}
-					if (StringUtils.isBlank(_varName)) {
-						throw new SAXException("tadah:var must have some value");
-					}
-					varName = _varName;
-					varValue.delete(0, varValue.length());
-					String type = atts.getValue("tadah:type");
-					if (type == null) {
-						varType = String.class;
-					} else {
-						try {
-							varType = Class.forName(type);
-						} catch (ClassNotFoundException e) {
-							throw new SAXException(e);
-						}
-					}
-				}
+			@Override
+			public void onGivenCompleted(String actualMethodName) {
+				model.setMethodNameForCurrentMethodSpecModel(actualMethodName);
+				model.setHandlerForCurrentMethodSpecModel(currentHandler);
 			}
 
-			public void startDocument() throws SAXException {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void skippedEntity(String name) throws SAXException {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void setDocumentLocator(Locator locator) {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void processingInstruction(String target, String data)
-					throws SAXException {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void ignorableWhitespace(char[] ch, int start, int length)
-					throws SAXException {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void endPrefixMapping(String prefix) throws SAXException {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void endElement(String uri, String localName, String qName)
-					throws SAXException {
-				logger.debug("end: uri=" + uri + ", localName=" + localName + ", qName=" + qName);
-				if (StringUtils.isNotEmpty(varName)) {
-					try {
-						Object actualValue = varType.getConstructor(String.class).newInstance(varValue.toString());
-						model.addStaticBinding(varName, actualValue);
-						model.addMethodArgumentTypeForCurrentMethodSpecModel(varType);
-						model.addMethodArgumentValueForCurrentMethodSpecModel(actualValue);
-					} catch (Exception e) {
-						throw new SAXException(e);
-					}
-					varName = null;
-					varValue.delete(0, varValue.length());
-				} else if (StringUtils.isNotBlank(methodName)) {
-					methodName.deleteCharAt(0);
-					String actualMethodName = StringUtils.uncapitalize(WordUtils.capitalizeFully(methodName.toString()).replaceAll("\\s", ""));
-
-					logger.debug("Method name: " + actualMethodName);
-					model.setMethodNameForCurrentMethodSpecModel(actualMethodName);
-					methodName.delete(0, methodName.length());
-				}
-			}
-
-			public void endDocument() throws SAXException {
-				// TODO Auto-generated method stub
-
-			}
-
-			public void characters(char[] ch, int start, int length)
-					throws SAXException {
-				if (StringUtils.isNotBlank(varName)) {
-					varValue.append(new String(ch));
-				} else if (StringUtils.isNotBlank(methodName)) {
-					methodName.append(" ").append(StringUtils.trim(new String(ch)));
-				}
+			@Override
+			public void onGiven() {
+				model.newMethodSpecModel();
 			}
 		});
 	}
@@ -170,13 +72,14 @@ public class DataSpecModelBuilder {
 	private void parse(TadahDataSpec... specs) {
 		if (specs != null && specs.length > 0) {
 			for (TadahDataSpec spec : specs) {
-				model.newMethodSpecModel();
+				currentHandler = spec.handler();
 				try {
-					parser.parse(new InputSource(new StringReader("<div tadah:given>" + spec.value() + "</div>")));
+					parser.parse(new StringBuffer()
+						.append("<div ").append(DataSpecAttribute.GIVEN.getQName()).append(">")
+						.append(spec.value()).append("</div>").toString());
 				} catch (Exception e) {
 					throw new DataWizException(e);
 				}
-				model.setHandlerForCurrentMethodSpecModel(spec.handler());
 			}
 		}
 	}
@@ -203,12 +106,12 @@ public class DataSpecModelBuilder {
 					: new StringBuffer().append(testMethod.getDeclaringClass().getSimpleName())
 						.append(".").append(testMethod.getName()).append(".html").toString();
 			logger.debug("Data Spec file: " + specFile);
+			currentHandler = spec.handler();
 			try {
-				parser.parse(new InputSource(testMethod.getDeclaringClass().getResourceAsStream(specFile)));
+				parser.parse(testMethod.getDeclaringClass().getResourceAsStream(specFile));
 			} catch (Exception e) {
 				throw new DataWizException(e);
 			}
-			model.setHandlerForCurrentMethodSpecModel(spec.handler());
 		}
 		return this;
 	}

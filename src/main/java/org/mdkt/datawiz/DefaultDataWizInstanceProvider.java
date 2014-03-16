@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.mdkt.datawiz;
 
@@ -28,10 +28,11 @@ public class DefaultDataWizInstanceProvider implements DataWizInstanceProvider {
 		}
 		return dataWizInstance.get(handler);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.mdkt.datawiz.DataWizInstanceProvider#get(java.lang.Class)
 	 */
+	@Override
 	public AbstractDataWiz get(Class<? extends AbstractDataWiz> handler) {
 		return addHandler(handler);
 	}
