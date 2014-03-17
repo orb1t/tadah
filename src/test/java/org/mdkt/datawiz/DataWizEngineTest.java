@@ -15,7 +15,7 @@ import org.junit.rules.TestName;
 import org.mdkt.datawiz.annotation.TadahDataSpec;
 import org.mdkt.datawiz.annotation.TadahDataSpecFile;
 import org.mdkt.datawiz.annotation.TadahDataSpecList;
-import org.mdkt.datawiz.type.ListType;
+import org.mdkt.datawiz.type.HtmlList;
 
 /**
  * @author trung
@@ -89,8 +89,8 @@ public class DataWizEngineTest {
 	private void verifyContextVariable(String varName, int idx, String expectedValue) {
 		Object contextValue = DataWizEngine.instance().getContextValue(varName);
 		Assert.assertNotNull("Context static-binding variable [" + varName + "] must not be null", contextValue);
-		Assert.assertEquals("Context static-binding variable [" + varName + "] data type", ListType.class, contextValue.getClass());
-		Assert.assertEquals("Context static-binding variable [" + varName + "] value at index [" + idx + "]", expectedValue, ((ListType)contextValue).get(idx));
+		Assert.assertEquals("Context static-binding variable [" + varName + "] data type", HtmlList.class, contextValue.getClass());
+		Assert.assertEquals("Context static-binding variable [" + varName + "] value at index [" + idx + "]", expectedValue, ((HtmlList)contextValue).get(idx));
 	}
 
 	/**

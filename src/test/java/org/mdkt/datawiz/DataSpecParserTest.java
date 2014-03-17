@@ -10,7 +10,7 @@ import junit.framework.Assert;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Test;
-import org.mdkt.datawiz.type.ListType;
+import org.mdkt.datawiz.type.HtmlList;
 
 /**
  * @author trung
@@ -41,11 +41,11 @@ public class DataSpecParserTest {
 		visitor.onGivenCompleted(EasyMock.eq("givenProducts"));
 		EasyMock.expectLastCall().once();
 		visitor.onVar(EasyMock.eq("countProduct"), EasyMock.eq(Integer.class), EasyMock.eq(3)); EasyMock.expectLastCall();
-		Capture<ListType> captureValue = new Capture<ListType>();
-		visitor.onVar(EasyMock.eq("productList"), EasyMock.eq(ListType.class), EasyMock.capture(captureValue)); EasyMock.expectLastCall();
+		Capture<HtmlList> captureValue = new Capture<HtmlList>();
+		visitor.onVar(EasyMock.eq("productList"), EasyMock.eq(HtmlList.class), EasyMock.capture(captureValue)); EasyMock.expectLastCall();
 		EasyMock.replay(visitor);
 		new DataSpecParser(visitor).parse(this.getClass().getResourceAsStream(this.getClass().getSimpleName() + ".html"));
-		ListType productList = captureValue.getValue();
+		HtmlList productList = captureValue.getValue();
 		Assert.assertEquals("Number of products", 3, productList.size());
 		Assert.assertEquals("productList[0]", "Laptop", productList.get(0));
 		Assert.assertEquals("productList[1]", "Mobile", productList.get(1));
