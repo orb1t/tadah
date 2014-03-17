@@ -56,6 +56,10 @@ public class DataSpecContentHandler implements ContentHandler {
 			default:
 				throw new SAXException("Unsupported attribute in the stack");
 			}
+		} else {
+			if (!attributeStack.isEmpty() && attributeStack.peek() == DataSpecAttribute.VAR) {
+				varValueStack.peek().append(ch);
+			}
 		}
 	}
 
