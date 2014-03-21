@@ -5,6 +5,8 @@ package org.mdkt.datawiz;
 
 import java.math.BigDecimal;
 
+import org.mdkt.datawiz.type.HtmlList;
+
 /**
  * @author trung
  *
@@ -28,6 +30,10 @@ public class DummyDataWiz extends AbstractDataWiz {
 	}
 
 	public void userMadeNoWithdrawalsRecently(String userName) {
+
+	}
+
+	public void givenProducts(Integer count, HtmlList productList) {
 
 	}
 }

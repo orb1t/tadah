@@ -75,9 +75,9 @@ public class DataWizEngineTest {
 	@Test
 	public void data_spec() {
 		verifyContextVariable("countProduct", Integer.class, 3);
-		verifyContextVariable("productList", 1, "Laptop");
-		verifyContextVariable("productList", 2, "Mobile");
-		verifyContextVariable("productList", 3, "Music Player");
+		verifyContextVariable("productList", 0, "Laptop");
+		verifyContextVariable("productList", 1, "Mobile");
+		verifyContextVariable("productList", 2, "Music Player");
 	}
 
 	/**

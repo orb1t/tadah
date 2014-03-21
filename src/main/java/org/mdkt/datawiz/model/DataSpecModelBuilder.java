@@ -101,7 +101,6 @@ public class DataSpecModelBuilder {
 	 */
 	public DataSpecModelBuilder from(TadahDataSpecFile spec, Method testMethod) {
 		if (spec != null) {
-			model.newMethodSpecModel();
 			String specFile = (StringUtils.isNotBlank(spec.value())) ? spec.value()
 					: new StringBuffer().append(testMethod.getDeclaringClass().getSimpleName())
 						.append(".").append(testMethod.getName()).append(".html").toString();
