@@ -117,4 +117,17 @@ public class DataWizEngine {
 	public void cleanUp() {
 		checkContext(true);
 	}
+
+	/**
+	 * Obtain variable binding value mentioned in the data spec phrase
+	 * or dynamically created during preparation
+	 *
+	 * @param variable
+	 * @param clazz of the return value
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T getContextValue(String variable, Class<T> clazz) {
+		return (T) getContextValue(variable);
+	}
 }
